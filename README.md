@@ -94,3 +94,4 @@ Here are a few things you can do with the API (I use **Thunder Client** to test 
 
 If you liked this project or have suggestions, feel free to reach out!
 * **GitHub:** [sagnikdatta2k6](https://github.com/sagnikdatta2k6)
+* **LinkedIn:** [sagnik-datta-coder](www.linkedin.com/in/sagnik-dattta-coder)
