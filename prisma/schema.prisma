@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+// --- LEVEL 3: MULTI-TENANCY ---
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String   // e.g., "Tech Corp", "College Fest Committee"
+  users     User[]
+  events    Event[]
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id             String       @id @default(uuid())
+  email          String       @unique
+  password       String
+  name           String
+  role           Role         @default(USER)
+  
+  // Link User to an Organization
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+
+  tickets        Ticket[]
+  teams          TeamMember[]
+  createdAt      DateTime     @default(now())
+}
+
+model Event {
+  id               String       @id @default(uuid())
+  title            String
+  description      String
+  date             DateTime
+  location         String
+  totalTickets     Int
+  availableTickets Int
+  price            Decimal
+  
+  // Link Event to an Organization (Data Isolation)
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  organizationId   String
+
+  // Sub-events (Fest Support)
+  parentId         String?
+  parent           Event?       @relation("EventHierarchy", fields: [parentId], references: [id])
+  subEvents        Event[]      @relation("EventHierarchy")
+
+  tickets          Ticket[]
+  teams            Team[]
+
+  // --- NEW LEVEL 2: ANNOUNCEMENTS ---
+  announcements    Announcement[]
+
+  createdAt        DateTime     @default(now())
+}
+
+model Ticket {
+  id          String   @id @default(uuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  event       Event    @relation(fields: [eventId], references: [id])
+  eventId     String
+  purchasedAt DateTime @default(now())
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  name      String
+  event     Event    @relation(fields: [eventId], references: [id])
+  eventId   String
+  members   TeamMember[]
+  createdAt DateTime @default(now())
+}
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  team      Team     @relation(fields: [teamId], references: [id])
+  teamId    String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  
+  @@unique([teamId, userId])
+}
+
+// --- NEW LEVEL 2 MODEL ---
+model Announcement {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  event     Event    @relation(fields: [eventId], references: [id])
+  eventId   String
+  createdAt DateTime @default(now())
+}

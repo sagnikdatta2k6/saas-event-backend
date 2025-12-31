@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Event Dashboard</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        .box { border: 2px solid #333; padding: 20px; margin-top: 20px; display: inline-block; border-radius: 10px; }
+        h1 { color: #4CAF50; }
+        #log { margin-top: 20px; color: #555; }
+    </style>
+</head>
+<body>
+
+    <h2>🎫 Real-Time Event Monitor</h2>
+    
+    <div>
+        <input type="text" id="eventId" placeholder="Paste Event ID here" style="padding: 10px; width: 300px;">
+        <button onclick="joinEvent()" style="padding: 10px; cursor: pointer;">Watch Event</button>
+    </div>
+
+    <div class="box">
+        <h3>Tickets Remaining</h3>
+        <h1 id="ticketCount">--</h1>
+        <p id="lastUpdate">Waiting for updates...</p>
+    </div>
+
+    <div id="log"></div>
+
+    <script>
+        const socket = io('http://localhost:3000'); // Connect to backend
+
+        socket.on('connect', () => {
+            console.log("Connected to server:", socket.id);
+            document.getElementById('log').innerText = "✅ Connected to Server";
+        });
+
+        function joinEvent() {
+            const eventId = document.getElementById('eventId').value;
+            if (!eventId) return alert("Please enter an Event ID");
+
+            // Tell server we want to watch this specific event
+            socket.emit('join-event', eventId);
+            document.getElementById('log').innerText = `👀 Watching Event: ${eventId}`;
+        }
+
+        // LISTEN FOR UPDATES FROM BACKEND
+        socket.on('ticket-update', (data) => {
+            console.log("Update received:", data);
+            
+            // Update the HTML automatically!
+            document.getElementById('ticketCount').innerText = data.availableTickets;
+            document.getElementById('lastUpdate').innerText = data.message;
+            
+            // Flash effect
+            document.body.style.backgroundColor = "#e8f5e9";
+            setTimeout(() => document.body.style.backgroundColor = "white", 500);
+        });
+    </script>
+
+</body>
+</html>
